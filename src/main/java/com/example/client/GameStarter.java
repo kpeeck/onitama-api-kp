@@ -29,7 +29,7 @@ public class GameStarter {
     public void run() {
 
         while (gameIsRunning) {
-            if (true) {
+            if (checkIfMyTurn()) {
                 KonradStateObject state = getLatestMove();
                 if (state == null) {
                     System.out.println("No moves have been made yet.");
