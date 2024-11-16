@@ -16,6 +16,7 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
+
         // final int NUM_GAMES = 500; // Number of games to play
         final int hours = 1; // Time limit in hours
         final int TIME = 10 * 60 * 1000; // Time limit in milliseconds

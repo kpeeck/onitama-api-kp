@@ -489,4 +489,8 @@ public class Game {
         currentPlayer = (currentPlayer == playerBlue) ? playerRed : playerBlue;
     }
 
+    public Card getNeutralCard() {
+        return neutralCard;
+    }
+
 }
