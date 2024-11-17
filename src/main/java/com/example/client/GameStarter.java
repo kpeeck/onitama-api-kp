@@ -33,8 +33,14 @@ public class GameStarter {
     public static void main(String[] args) {
         GameStarter gameStarter = new GameStarter();
         // gameStarter.test();
-        gameStarter.initializeGame();
-        gameStarter.run();
+        for (int i = 0; i < 20; i++) {
+            gameStarter.gameIsRunning = false;
+            gameStarter.game = new Game();
+            gameStarter.playerColor = Color.BLUE;
+            gameStarter.initializeGame();
+            gameStarter.run();
+        }
+
     }
 
     public void test() {
