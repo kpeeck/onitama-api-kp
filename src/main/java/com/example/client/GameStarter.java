@@ -8,6 +8,10 @@ import org.springframework.web.client.RestTemplate;
 
 import com.example.logic.Color;
 import com.example.logic.Game;
+import com.example.logic.Move;
+import com.example.logic.Piece;
+import com.example.logic.Tile;
+import com.example.players.MCTSLPPlayer;
 
 public class GameStarter {
 
@@ -41,16 +45,16 @@ public class GameStarter {
 
     public void initializeGame() {
         // http://<your-server-address>/createGameKonrad?cards=card1&cards=card2&cards=card3&cards=card4&cards=card5
-        StringBuffer cards = new StringBuffer();
+        StringBuilder cards = new StringBuilder();
         for (int i = 0; i < game.getPlayerBlue().getCards().size(); i++) {
-            cards.append("cards=" + game.getPlayerBlue().getCards().get(i).getName() + "&");
+            cards.append("cards=").append(game.getPlayerBlue().getCards().get(i).getName()).append("&");
         }
 
         for (int i = 0; i < game.getPlayerRed().getCards().size(); i++) {
-            cards.append("cards=" + game.getPlayerRed().getCards().get(i).getName() + "&");
+            cards.append("cards=").append(game.getPlayerRed().getCards().get(i).getName()).append("&");
         }
 
-        cards.append("cards=" + game.getNeutralCard().getName());
+        cards.append("cards=").append(game.getNeutralCard().getName());
 
         String url = baseUrl + "/create?" + cards.toString();
 
@@ -77,12 +81,24 @@ public class GameStarter {
                     if (state == null) {
                         System.out.println("No moves have been made yet.");
                     } else {
-                        // Hier mit dem State deinen Gamestate updaten
-                        // Dann Move bauen
-                        // Move als KonradStateObject speichern
                         System.out.println(state.getX() + " " + state.getY() + " " + state.getMovementX() + " "
                                 + state.getMovementY() + " " + state.getCardName());
-                        KonradMoveObject move = new KonradMoveObject();
+                        // Hier mit dem State deinen Gamestate updaten
+                        Piece piece = game.getBoard().getTile(state.getX(), state.getY()).getPiece();
+                        Tile origin = piece.getTile();
+                        Tile target = game.getBoard().getTile(origin.getX() + state.getMovementX(),
+                                origin.getY() + state.getMovementY());
+                        Move philsMove = new Move(game.getCardByName(state.getCardName()),
+                                piece, new int[]{state.getMovementX(), state.getMovementY()},
+                                origin, target);
+                        game.playTurn(philsMove);
+                        // Dann Move bauen
+                        Move konradsMove = new MCTSLPPlayer("BLUE", Color.BLUE).move(game);
+                        game.playTurn(konradsMove);
+                        // Move als KonradStateObject speichern
+                        KonradMoveObject move = new KonradMoveObject(origin.getX(),
+                                origin.getY(), konradsMove.getMovement()[1],
+                                konradsMove.getMovement()[0], konradsMove.getCard().getName());
                         submitMove(move);
                     }
                 }

@@ -65,10 +65,10 @@ public class Board {
      * @param player1 the first player
      * @param player2 the second player
      */
-    public void initializeBoard(Player player1, Player player2) {
+    public void initializeBoard(Player playerBlue, Player playerRed) {
         // Set up the initial positions of all pieces on the board and return a list of all pieces
-        List<Piece> bluePieces = player1.getPieces();
-        List<Piece> redPieces = player2.getPieces();
+        List<Piece> bluePieces = playerBlue.getPieces();
+        List<Piece> redPieces = playerRed.getPieces();
         for (int i = 0; i < SIZE; i++) {
             if (i != (int) (SIZE / 2)) {
                 Piece blueStudent = new Piece(PieceType.BLUESTUDENT); // Create a new blue student piece

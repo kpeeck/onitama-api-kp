@@ -50,8 +50,8 @@ public class Game {
      * Initializes the players of the game.
      */
     private void initializePlayers() {
-        playerBlue = new MCTSLPPlayer("BLUE", Color.BLUE);   // Create Player 1
-        playerRed = new MCTSHPPlayer("RED", Color.RED);     // Create Player 2
+        playerBlue = new MCTSLPPlayer("BLUE", Color.BLUE);   // Create Player Blue
+        playerRed = new MCTSHPPlayer("RED", Color.RED);     // Create Player Red
     }
 
     /**
@@ -491,6 +491,15 @@ public class Game {
 
     public Card getNeutralCard() {
         return neutralCard;
+    }
+
+    public Card getCardByName(String cardName) {
+        for (Card card : usedCards) {
+            if (card.getName().equals(cardName)) {
+                return card;
+            }
+        }
+        return null;
     }
 
 }
