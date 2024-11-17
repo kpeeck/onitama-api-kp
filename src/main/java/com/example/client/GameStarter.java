@@ -79,7 +79,14 @@ public class GameStarter {
                 if (checkIfMyTurn()) {
                     KonradMoveObject state = getLatestMove();
                     if (state == null) {
-                        System.out.println("No moves have been made yet.");
+                        Move konradsMove = new MCTSLPPlayer("BLUE", Color.BLUE).move(game);
+                        game.playTurn(konradsMove);
+                        System.out.println(game.getBoard());
+                        // Move als KonradStateObject speichern
+                        KonradMoveObject move = new KonradMoveObject(konradsMove.getOrigin().getX(),
+                                konradsMove.getOrigin().getY(), konradsMove.getMovement()[0],
+                                konradsMove.getMovement()[1], konradsMove.getCard().getName());
+                        submitMove(move);
                     } else {
                         System.out.println(state.getX() + " " + state.getY() + " " + state.getMovementX() + " "
                                 + state.getMovementY() + " " + state.getCardName());
@@ -89,16 +96,17 @@ public class GameStarter {
                         Tile target = game.getBoard().getTile(origin.getX() + state.getMovementX(),
                                 origin.getY() + state.getMovementY());
                         Move philsMove = new Move(game.getCardByName(state.getCardName()),
-                                piece, new int[]{state.getMovementX(), state.getMovementY()},
+                                piece, new int[] { state.getMovementX(), state.getMovementY() },
                                 origin, target);
                         game.playTurn(philsMove);
                         // Dann Move bauen
                         Move konradsMove = new MCTSLPPlayer("BLUE", Color.BLUE).move(game);
                         game.playTurn(konradsMove);
+                        System.out.println(game.getBoard());
                         // Move als KonradStateObject speichern
-                        KonradMoveObject move = new KonradMoveObject(origin.getX(),
-                                origin.getY(), konradsMove.getMovement()[1],
-                                konradsMove.getMovement()[0], konradsMove.getCard().getName());
+                        KonradMoveObject move = new KonradMoveObject(konradsMove.getOrigin().getX(),
+                                konradsMove.getOrigin().getY(), konradsMove.getMovement()[0],
+                                konradsMove.getMovement()[1], konradsMove.getCard().getName());
                         submitMove(move);
                     }
                 }
