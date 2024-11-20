@@ -10,23 +10,23 @@ import com.example.logic.Move;
 import com.example.logic.Piece;
 import com.example.logic.Tile;
 
-public class MCTSHPPlayer extends Player {
+public class MCTSlightPlayer extends Player {
 
     private static final int TIMELIMIT = 2000;  // Time limit in milliseconds (2 seconds)
 
-    public MCTSHPPlayer(String name, Color color) {
+    public MCTSlightPlayer(String name, Color color) {
         super(name, color);
     }
 
     @Override
     public Move move(Game game) {
-        Node2 rootNode = new Node2(game.clone());  // Create a root node with the current game state, no move or parent
+        Node rootNode = new Node(game.clone());  // Create a root node with the current game state, no move or parent
 
         long startTime = System.currentTimeMillis();
 
         while (System.currentTimeMillis() - startTime < TIMELIMIT) {
-            Node2 selectedNode = select(rootNode);
-            Node2 child = expand(selectedNode);
+            Node selectedNode = select(rootNode);
+            Node child = expand(selectedNode);
             int result = simulate(child);
             backpropagate(child, result);
         }
@@ -36,7 +36,7 @@ public class MCTSHPPlayer extends Player {
     }
 
     // Step 1: Selection - Traverse the tree using UCT to find the best node to explore
-    private Node2 select(Node2 node) {
+    private Node select(Node node) {
         while (!node.children.isEmpty() && node.children.size() == Board.getPossibleMoves(node.game).size()) {
             node = bestUCT(node);
         }
@@ -48,13 +48,13 @@ public class MCTSHPPlayer extends Player {
     }
 
     // Step 2: Expansion - Add a new child node for each possible move
-    private Node2 expand(Node2 node) {
+    private Node expand(Node node) {
         if (node.game.isGameOver()) {
             return node;
         }
         List<Move> possibleMoves = Board.getPossibleMoves(node.game);
         List<Move> usedMoves = new ArrayList<>();
-        for (Node2 child : node.children) {
+        for (Node child : node.children) {
             Move move = child.move;
             Piece piece = move.getPiece().clone();
             piece.setTile(move.getOrigin());
@@ -76,10 +76,10 @@ public class MCTSHPPlayer extends Player {
         Move clonedMove = new Move(card, piece, move.getMovementCopy(), originTile, targetTile);
 
         // Now apply the cloned move to the cloned game
-        newGameState.playTurn(clonedMove, 1);
+        newGameState.playTurn(clonedMove);
 
         // Create a child node with the cloned game state
-        Node2 childNode = new Node2(newGameState, clonedMove, node);
+        Node childNode = new Node(newGameState, clonedMove, node);
         node.addChild(childNode);  // Add the new child node to the parent's children list
         return childNode;
         // List<Move> possibleMoves = Board.getPossibleMoves(node.game);
@@ -106,7 +106,7 @@ public class MCTSHPPlayer extends Player {
     }
 
     // Step 3: Simulation - Play a random game to the end from this state and return the result
-    private int simulate(Node2 node) {
+    private int simulate(Node node) {
         if (node.game.isGameOver()) {
             return 1;
         }
@@ -118,19 +118,19 @@ public class MCTSHPPlayer extends Player {
             // Check if there are no possible moves
             if (possibleMoves.isEmpty()) {
                 // Skip the turn if there are no possible moves (this is done by passing null)
-                tempGame.playTurn(null, 1);
+                tempGame.playTurn(null);
                 // Continue the simulation
                 continue;
             }
             Move randomMove = possibleMoves.get((int) (Math.random() * possibleMoves.size()));
-            tempGame.playTurn(randomMove, 1);
+            tempGame.playTurn(randomMove);
         }
         // Winner of simulation = player at the parent node? If yes -> 1, else 0
         return tempGame.getStatistics().getWinner().getColor() == previousPlayerColor ? 1 : 0;  // 1 for win, 0 for loss
     }
 
     // Step 4: Backpropagation - Update the current node and all ancestors with the result
-    private void backpropagate(Node2 node, int result) {
+    private void backpropagate(Node node, int result) {
         while (node != null) {
             node.visits++;
             node.wins += result;  // Adjust based on the result of the simulation
@@ -140,11 +140,11 @@ public class MCTSHPPlayer extends Player {
     }
 
     // Helper function to get the best child based on UCT
-    private Node2 bestUCT(Node2 node) {
-        Node2 bestChild = null;
+    private Node bestUCT(Node node) {
+        Node bestChild = null;
         double bestUCTValue = Double.NEGATIVE_INFINITY;
 
-        for (Node2 child : node.children) {
+        for (Node child : node.children) {
             double uctValue = child.getUCTValue(this.getColor());
             if (uctValue > bestUCTValue) {
                 bestUCTValue = uctValue;
@@ -158,11 +158,11 @@ public class MCTSHPPlayer extends Player {
     }
 
     // Step 5: Choose the best move based on the most visited child node
-    private Move getBestMove(Node2 rootNode) {
-        Node2 bestNode = null;
+    private Move getBestMove(Node rootNode) {
+        Node bestNode = null;
         int mostVisits = Integer.MIN_VALUE;
 
-        for (Node2 child : rootNode.children) {
+        for (Node child : rootNode.children) {
             if (child.visits > mostVisits) {
                 mostVisits = child.visits;
                 bestNode = child;
@@ -177,21 +177,21 @@ public class MCTSHPPlayer extends Player {
 
     @Override
     public Player clone() {
-        return new MCTSHPPlayer(this.getName(), this.getColor());
+        return new MCTSlightPlayer(this.getName(), this.getColor());
     }
 }
 
-class Node2 {
+class Node {
 
     Game game;  // Der aktuelle Zustand des Spiels in diesem Knoten
-    Node2 parent;  // Der Elternknoten
-    List<Node2> children;  // Die Kindknoten
+    Node parent;  // Der Elternknoten
+    List<Node> children;  // Die Kindknoten
     int visits = 0;  // Anzahl der Besuche dieses Knotens (MCTS)
     int wins = 0;  // Anzahl der Siege aus diesem Knoten
     Move move;  // Der Zug, der diesen Knoten erzeugt hat
 
     // Konstruktor, der den Zug zusätzlich aufnimmt
-    Node2(Game game, Move move, Node2 parent) {
+    Node(Game game, Move move, Node parent) {
         this.game = game;
         this.move = move;  // Speichern des Zugs, der zu diesem Knoten führt
         this.parent = parent;  // Setzt den Elternknoten
@@ -199,7 +199,7 @@ class Node2 {
     }
 
     // Konstruktor für den Wurzelknoten
-    Node2(Game game) {
+    Node(Game game) {
         this.game = game;
         this.move = null;  // Der Wurzelknoten hat keinen Zug
         this.parent = null;  // Der Wurzelknoten hat keinen Elternknoten
@@ -222,7 +222,7 @@ class Node2 {
     }
 
     // Methode zum Hinzufügen eines Kindknotens
-    void addChild(Node2 child) {
+    void addChild(Node child) {
         this.children.add(child);
     }
 }

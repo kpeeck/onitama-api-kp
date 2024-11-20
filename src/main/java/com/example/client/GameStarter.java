@@ -11,7 +11,7 @@ import com.example.logic.Game;
 import com.example.logic.Move;
 import com.example.logic.Piece;
 import com.example.logic.Tile;
-import com.example.players.MCTSLPPlayer;
+import com.example.players.MCTSlightPlayer;
 
 public class GameStarter {
 
@@ -79,7 +79,7 @@ public class GameStarter {
                 if (checkIfMyTurn()) {
                     KonradMoveObject state = getLatestMove();
                     if (state == null) {
-                        Move konradsMove = new MCTSLPPlayer("BLUE", Color.BLUE).move(game);
+                        Move konradsMove = new MCTSlightPlayer("BLUE", Color.BLUE).move(game);
                         game.playTurn(konradsMove);
                         System.out.println(game.getBoard());
                         // Move als KonradStateObject speichern
@@ -96,11 +96,11 @@ public class GameStarter {
                         Tile target = game.getBoard().getTile(origin.getX() + state.getMovementX(),
                                 origin.getY() + state.getMovementY());
                         Move philsMove = new Move(game.getCardByName(state.getCardName()),
-                                piece, new int[] { state.getMovementX(), state.getMovementY() },
+                                piece, new int[]{state.getMovementX(), state.getMovementY()},
                                 origin, target);
                         game.playTurn(philsMove);
                         // Dann Move bauen
-                        Move konradsMove = new MCTSLPPlayer("BLUE", Color.BLUE).move(game);
+                        Move konradsMove = new MCTSlightPlayer("BLUE", Color.BLUE).move(game);
                         game.playTurn(konradsMove);
                         System.out.println(game.getBoard());
                         // Move als KonradStateObject speichern

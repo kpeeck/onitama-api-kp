@@ -2,6 +2,7 @@ package com.example.players;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import com.example.logic.Board;
 import com.example.logic.Card;
 import com.example.logic.Color;
@@ -10,51 +11,51 @@ import com.example.logic.Move;
 import com.example.logic.Piece;
 import com.example.logic.Tile;
 
-public class MCTSLPPlayer extends Player {
+public class MCTSheavyPlayer extends Player {
 
     private static final int TIMELIMIT = 2000;  // Time limit in milliseconds (2 seconds)
+    private static final int MAX_DEPTH = 100;  // Maximum depth for the MCTS tree
 
-    public MCTSLPPlayer(String name, Color color) {
+    public MCTSheavyPlayer(String name, Color color) {
         super(name, color);
     }
 
     @Override
     public Move move(Game game) {
-        Node rootNode = new Node(game.clone());  // Create a root node with the current game state, no move or parent
+        NodeHeavy rootNode = new NodeHeavy(game.clone());  // Create a root node with the current game state, no move or parent
 
+        //int iterations = 0;
         long startTime = System.currentTimeMillis();
 
         while (System.currentTimeMillis() - startTime < TIMELIMIT) {
-            Node selectedNode = select(rootNode);
-            Node child = expand(selectedNode);
-            int result = simulate(child);
+            NodeHeavy selectedNode = select(rootNode);
+            NodeHeavy child = expand(selectedNode);
+            double result = simulate(child);
             backpropagate(child, result);
+            // iterations++;
         }
 
+        // System.out.println("Iterations (heavy): " + iterations);
         // Step 5: Return the move from the most visited child node
         return getBestMove(rootNode).getEquivalentMove(game);
     }
 
     // Step 1: Selection - Traverse the tree using UCT to find the best node to explore
-    private Node select(Node node) {
+    private NodeHeavy select(NodeHeavy node) {
         while (!node.children.isEmpty() && node.children.size() == Board.getPossibleMoves(node.game).size()) {
             node = bestUCT(node);
         }
         return node;
-        // while (!node.children.isEmpty()) {
-        //     node = bestUCT(node);
-        // }
-        // return node;
     }
 
     // Step 2: Expansion - Add a new child node for each possible move
-    private Node expand(Node node) {
+    private NodeHeavy expand(NodeHeavy node) {
         if (node.game.isGameOver()) {
             return node;
         }
         List<Move> possibleMoves = Board.getPossibleMoves(node.game);
         List<Move> usedMoves = new ArrayList<>();
-        for (Node child : node.children) {
+        for (NodeHeavy child : node.children) {
             Move move = child.move;
             Piece piece = move.getPiece().clone();
             piece.setTile(move.getOrigin());
@@ -79,41 +80,23 @@ public class MCTSLPPlayer extends Player {
         newGameState.playTurn(clonedMove);
 
         // Create a child node with the cloned game state
-        Node childNode = new Node(newGameState, clonedMove, node);
+        NodeHeavy childNode = new NodeHeavy(newGameState, clonedMove, node);
         node.addChild(childNode);  // Add the new child node to the parent's children list
         return childNode;
-        // List<Move> possibleMoves = Board.getPossibleMoves(node.game);
-        // for (Move move : possibleMoves) {
-        //     Game newGameState = node.game.clone();
-
-        //     //Card card = move.getEquivalentCard(newGameState);
-        //     Card card = move.getCard().clone();
-        //     // Map the original objects (piece, Card) in the move to the cloned game objects
-        //     Piece piece = move.getEquivalentPiece(newGameState);
-        //     Tile originTile = piece.getTile(); // This should represent the origin tile
-        //     Tile targetTile = newGameState.getBoard().getTile(
-        //             originTile.getX() + move.getMovement()[0],
-        //             originTile.getY() + move.getMovement()[1]
-        //     );
-        //     // Create a new move using the mapped objects from the cloned game
-        //     Move clonedMove = new Move(card, piece, move.getMovementCopy(), targetTile);
-        //     // Now apply the cloned move to the cloned game
-        //     newGameState.playTurn(clonedMove);
-        //     // Create a child node with the cloned game state
-        //     Node childNode = new Node(newGameState, clonedMove, node);
-        //     node.addChild(childNode);  // Add the new child node to the parent's children list
-        // }
     }
 
     // Step 3: Simulation - Play a random game to the end from this state and return the result
-    private int simulate(Node node) {
+    private double simulate(NodeHeavy node) {
         if (node.game.isGameOver()) {
             return 1;
         }
         Game tempGame = node.game.clone();
         Color currentPlayerColor = tempGame.getCurrentPlayer().getColor();
         Color previousPlayerColor = currentPlayerColor == Color.BLUE ? Color.RED : Color.BLUE;
-        while (!tempGame.isGameOver()) {
+
+        int depth = 0;
+
+        while (!tempGame.isGameOver() && depth < MAX_DEPTH) {
             List<Move> possibleMoves = Board.getPossibleMoves(tempGame);
             // Check if there are no possible moves
             if (possibleMoves.isEmpty()) {
@@ -122,29 +105,56 @@ public class MCTSLPPlayer extends Player {
                 // Continue the simulation
                 continue;
             }
-            Move randomMove = possibleMoves.get((int) (Math.random() * possibleMoves.size()));
-            tempGame.playTurn(randomMove);
+            Player currentPlayer = tempGame.getCurrentPlayer();
+            Move aggressiveMove = new AggressivePlayer(currentPlayer.getName(),
+                    currentPlayer.getColor()).move(tempGame);
+            tempGame.playTurn(aggressiveMove);
+            depth++;
         }
+
+        // If maximum depth is reached without a clear game-over state, return a heuristic evaluation
+        if (depth >= MAX_DEPTH) {
+            return evaluateGameState(tempGame, previousPlayerColor); // Use heuristic evaluation
+        }
+
         // Winner of simulation = player at the parent node? If yes -> 1, else 0
+        // return tempGame.getCurrentPlayer().getColor() == previousPlayerColor ? 1 : 0;  // 1 for win, 0 for loss
         return tempGame.getStatistics().getWinner().getColor() == previousPlayerColor ? 1 : 0;  // 1 for win, 0 for loss
     }
 
+    private double evaluateGameState(Game game, Color playerColor) {
+        Player currentPlayer = playerColor == Color.BLUE ? game.getPlayerBlue() : game.getPlayerRed();
+        Player opponent = playerColor == Color.BLUE ? game.getPlayerRed() : game.getPlayerBlue();
+
+        int pieceDifference = currentPlayer.getPieces().size() - opponent.getPieces().size();
+
+        // Heuristic: Favor the player with more pieces
+        if (pieceDifference > 0) {
+            return 1; // Favor current player
+        } else if (pieceDifference < 0) {
+            return 0; // Favor opponent
+        }
+
+        // Neutral heuristic in case of tie
+        return 0.5; // Can be adjusted depending on your algorithm's requirements
+    }
+
     // Step 4: Backpropagation - Update the current node and all ancestors with the result
-    private void backpropagate(Node node, int result) {
+    private void backpropagate(NodeHeavy node, double result) {
         while (node != null) {
             node.visits++;
-            node.wins += result;  // Adjust based on the result of the simulation
+            node.score += result;  // Adjust based on the result of the simulation
             node = node.parent;
             result = 1 - result;  // Switch the result for the parent node
         }
     }
 
     // Helper function to get the best child based on UCT
-    private Node bestUCT(Node node) {
-        Node bestChild = null;
+    private NodeHeavy bestUCT(NodeHeavy node) {
+        NodeHeavy bestChild = null;
         double bestUCTValue = Double.NEGATIVE_INFINITY;
 
-        for (Node child : node.children) {
+        for (NodeHeavy child : node.children) {
             double uctValue = child.getUCTValue(this.getColor());
             if (uctValue > bestUCTValue) {
                 bestUCTValue = uctValue;
@@ -158,11 +168,11 @@ public class MCTSLPPlayer extends Player {
     }
 
     // Step 5: Choose the best move based on the most visited child node
-    private Move getBestMove(Node rootNode) {
-        Node bestNode = null;
+    private Move getBestMove(NodeHeavy rootNode) {
+        NodeHeavy bestNode = null;
         int mostVisits = Integer.MIN_VALUE;
 
-        for (Node child : rootNode.children) {
+        for (NodeHeavy child : rootNode.children) {
             if (child.visits > mostVisits) {
                 mostVisits = child.visits;
                 bestNode = child;
@@ -177,21 +187,21 @@ public class MCTSLPPlayer extends Player {
 
     @Override
     public Player clone() {
-        return new MCTSLPPlayer(this.getName(), this.getColor());
+        return new MCTSheavyPlayer(this.getName(), this.getColor());
     }
 }
 
-class Node {
+class NodeHeavy {
 
     Game game;  // Der aktuelle Zustand des Spiels in diesem Knoten
-    Node parent;  // Der Elternknoten
-    List<Node> children;  // Die Kindknoten
+    NodeHeavy parent;  // Der Elternknoten
+    List<NodeHeavy> children;  // Die Kindknoten
     int visits = 0;  // Anzahl der Besuche dieses Knotens (MCTS)
-    int wins = 0;  // Anzahl der Siege aus diesem Knoten
+    double score = 0;  // Anzahl der Siege aus diesem Knoten
     Move move;  // Der Zug, der diesen Knoten erzeugt hat
 
     // Konstruktor, der den Zug zusätzlich aufnimmt
-    Node(Game game, Move move, Node parent) {
+    NodeHeavy(Game game, Move move, NodeHeavy parent) {
         this.game = game;
         this.move = move;  // Speichern des Zugs, der zu diesem Knoten führt
         this.parent = parent;  // Setzt den Elternknoten
@@ -199,7 +209,7 @@ class Node {
     }
 
     // Konstruktor für den Wurzelknoten
-    Node(Game game) {
+    NodeHeavy(Game game) {
         this.game = game;
         this.move = null;  // Der Wurzelknoten hat keinen Zug
         this.parent = null;  // Der Wurzelknoten hat keinen Elternknoten
@@ -212,17 +222,17 @@ class Node {
             // return Double.MAX_VALUE;  // Return max value if the node has not been visited yet
             return 0;
         }
-        double exploitation = (double) wins / visits;
+        double exploitation = score / visits;
 
         double exploration = Math.sqrt(Math.log(parent.visits) / visits);
 
-        double c = 1;
+        double c = 0.25;
 
         return exploitation + c * exploration;  // 1.41 is sqrt(2)
     }
 
     // Methode zum Hinzufügen eines Kindknotens
-    void addChild(Node child) {
+    void addChild(NodeHeavy child) {
         this.children.add(child);
     }
 }

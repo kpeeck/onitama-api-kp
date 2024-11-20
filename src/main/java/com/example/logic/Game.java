@@ -1,8 +1,9 @@
 package com.example.logic;
 
 import java.util.List;
-import com.example.players.MCTSHPPlayer;
-import com.example.players.MCTSLPPlayer;
+
+import com.example.players.MCTSheavyPlayer;
+import com.example.players.MCTSlightPlayer;
 import com.example.players.Player;
 
 /**
@@ -50,8 +51,8 @@ public class Game {
      * Initializes the players of the game.
      */
     private void initializePlayers() {
-        playerBlue = new MCTSLPPlayer("BLUE", Color.BLUE);   // Create Player Blue
-        playerRed = new MCTSHPPlayer("RED", Color.RED);     // Create Player Red
+        playerBlue = new MCTSlightPlayer("BLUE", Color.BLUE);   // Create Player 1
+        playerRed = new MCTSheavyPlayer("RED", Color.RED);     // Create Player 2
     }
 
     /**
@@ -232,22 +233,8 @@ public class Game {
             switchPlayers();
             return;
         }
-        // for performance reasons
-        // if (!Board.getPossibleMoves(this).contains(move)) {
-        //     System.out.println("Invalid move. Skipping turn.");
-        //     switchPlayers();
-        //     return;
-        // }
         Card card = move.getCard();
         Piece piece = move.getPiece();
-        // switch (piece.getType()) {
-        //     case BLUEMASTER ->
-        //         this.statistics.increaseBlueMasterMoves();
-        //     case REDMASTER ->
-        //         this.statistics.increaseRedMasterMoves();
-        //     default -> {
-        //     }
-        // }
         Tile origin = piece.getTile();
         int[] movement = move.getMovement();
         Tile target = board.getTile(origin.getX() + movement[0], origin.getY() + movement[1]);
@@ -255,15 +242,6 @@ public class Game {
             // Capture piece
             Player enemyPlayer = (currentPlayer == playerBlue) ? playerRed : playerBlue;
             enemyPlayer.getPieces().remove(target.getPiece());
-            // System.out.println("Piece captured: " + target.getPiece().toString());
-            // switch (target.getPiece().getType()) {
-            //     case BLUESTUDENT, BLUEMASTER ->
-            //         this.statistics.increaseCapturedBluePieces();
-            //     case REDSTUDENT, REDMASTER ->
-            //         this.statistics.increaseCapturedRedPieces();
-            //     default -> {
-            //     }
-            // }
         }
         origin.setPiece(null);
         target.setPiece(piece);
@@ -273,86 +251,7 @@ public class Game {
         currentPlayer.getCards().add(neutralCard);
         neutralCard = card;
 
-        // System.out.println(move + " origin: " + origin.toString() + " target: " + target);
-        // System.out.println(board);
-        // Execute move
         if (checkGameOver()) {
-            gameOver = true;
-            // declareWinner();
-            this.statistics.setWinner(currentPlayer);
-            this.statistics.setLoser((currentPlayer == playerBlue) ? playerRed : playerBlue);
-            //System.out.print(board);
-            return;
-        }
-
-        // Switch players
-        switchPlayers();
-        //System.out.print(board);
-    }
-
-    public void playTurn(Move move, int i) {
-        //System.out.println("Simulation:");
-        // Print current player's turn
-        //System.out.println(currentPlayer.getName() + "'s turn.");
-
-        // this.statistics.increaseTotalMoves();
-        // if (currentPlayer == startingPlayer) {
-        //     this.statistics.increaseTotalTurns();
-        // }
-        if (move == null) {
-            System.out.println("No moves available. Skipping turn.");
-            Card randomCard = currentPlayer.getCards().get((int) (Math.random() * currentPlayer.getCards().size()));
-            currentPlayer.getCards().remove(randomCard);
-            currentPlayer.getCards().add(neutralCard);
-            neutralCard = randomCard;
-            switchPlayers();
-            return;
-        }
-        // for performance reasons
-        // if (!Board.getPossibleMoves(this).contains(move)) {
-        //     System.out.println("Invalid move. Skipping turn.");
-        //     switchPlayers();
-        //     return;
-        // }
-        Card card = move.getCard();
-        Piece piece = move.getPiece();
-        // switch (piece.getType()) {
-        //     case BLUEMASTER ->
-        //         this.statistics.increaseBlueMasterMoves();
-        //     case REDMASTER ->
-        //         this.statistics.increaseRedMasterMoves();
-        //     default -> {
-        //     }
-        // }
-        Tile origin = piece.getTile();
-        int[] movement = move.getMovement();
-        Tile target = board.getTile(origin.getX() + movement[0], origin.getY() + movement[1]);
-        if (target.getPiece() != null) {
-            // Capture piece
-            Player enemyPlayer = (currentPlayer == playerBlue) ? playerRed : playerBlue;
-            enemyPlayer.getPieces().remove(target.getPiece());
-            // System.out.println("Piece captured: " + target.getPiece().toString());
-            // switch (target.getPiece().getType()) {
-            //     case BLUESTUDENT, BLUEMASTER ->
-            //         this.statistics.increaseCapturedBluePieces();
-            //     case REDSTUDENT, REDMASTER ->
-            //         this.statistics.increaseCapturedRedPieces();
-            //     default -> {
-            //     }
-            // }
-        }
-        origin.setPiece(null);
-        target.setPiece(piece);
-        piece.setTile(target);
-
-        currentPlayer.getCards().remove(card);
-        currentPlayer.getCards().add(neutralCard);
-        neutralCard = card;
-
-        // System.out.println(move + " origin: " + origin.toString() + " target: " + target);
-        // System.out.println(board);
-        // Execute move
-        if (Math.abs(playerBlue.getPieces().size() - playerRed.getPieces().size()) > 1 || checkGameOver()) {
             gameOver = true;
             // declareWinner();
             this.statistics.setWinner(currentPlayer);
@@ -485,21 +384,21 @@ public class Game {
         return playerRed;
     }
 
-    private void switchPlayers() {
-        currentPlayer = (currentPlayer == playerBlue) ? playerRed : playerBlue;
-    }
-
     public Card getNeutralCard() {
         return neutralCard;
     }
 
-    public Card getCardByName(String cardName) {
+    public Card getCardByName(String name) {
         for (Card card : usedCards) {
-            if (card.getName().equals(cardName)) {
+            if (card.getName().equals(name)) {
                 return card;
             }
         }
         return null;
+    }
+
+    private void switchPlayers() {
+        currentPlayer = (currentPlayer == playerBlue) ? playerRed : playerBlue;
     }
 
 }
