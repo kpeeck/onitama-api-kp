@@ -14,7 +14,7 @@ import com.example.logic.Tile;
 public class MCTSheavyPlayer extends Player {
 
     private static final int TIMELIMIT = 2000;  // Time limit in milliseconds (2 seconds)
-    private static final int MAX_DEPTH = 100;  // Maximum depth for the MCTS tree
+    private static final int MAX_DEPTH = 50;  // Maximum depth for the MCTS tree
 
     public MCTSheavyPlayer(String name, Color color) {
         super(name, color);
