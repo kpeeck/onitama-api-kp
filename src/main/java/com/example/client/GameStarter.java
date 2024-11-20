@@ -84,6 +84,7 @@ public class GameStarter {
 
                 if (checkIfMyTurn()) {
                     KonradMoveObject state = getLatestMove();
+
                     if (state == null) {
                         Move konradsMove = new MCTSLPPlayer("BLUE", Color.BLUE).move(game);
                         game.playTurn(konradsMove);
@@ -115,6 +116,8 @@ public class GameStarter {
                                 konradsMove.getMovement()[1], konradsMove.getCard().getName());
                         submitMove(move);
                     }
+                } else {
+                    System.out.println("not my turn");
                 }
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
