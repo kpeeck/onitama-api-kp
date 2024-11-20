@@ -2,6 +2,7 @@ package com.example.players;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import com.example.logic.Board;
 import com.example.logic.Card;
 import com.example.logic.Color;
@@ -216,7 +217,7 @@ class Node {
 
         double exploration = Math.sqrt(Math.log(parent.visits) / visits);
 
-        double c = 1;
+        double c = 0.25;
 
         return exploitation + c * exploration;  // 1.41 is sqrt(2)
     }
