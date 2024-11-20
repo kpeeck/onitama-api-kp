@@ -44,7 +44,7 @@ public class GameStarter {
     public static void main(String[] args) {
         GameStarter gameStarter = new GameStarter();
 
-        gameStarter.runGames(1 * 60 * 1000, "RAVE_MCTS", "light");
+        gameStarter.runGames(1 * 60 * 1000, "MCTS", "light");
         gameStarter.runGames(1 * 60 * 1000, "RAVE_MCTS", "heavy");
         gameStarter.runGames(1 * 60 * 1000, "HEURISTIC_MCTS", "heavy");
     }
