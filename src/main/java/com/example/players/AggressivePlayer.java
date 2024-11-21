@@ -2,10 +2,12 @@ package com.example.players;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import com.example.logic.Board;
 import com.example.logic.Color;
 import com.example.logic.Game;
 import com.example.logic.Move;
+import com.example.logic.PieceType;
 
 public class AggressivePlayer extends Player {
 
@@ -23,6 +25,25 @@ public class AggressivePlayer extends Player {
     public Move move(Game game) {
         // Get all possible moves on the current board
         List<Move> moves = Board.getPossibleMoves(game);
+
+        List<Move> winningMoves = new ArrayList<>();
+        for (Move move : moves) {
+            if ((move.getTarget().getPiece() != null
+                    && (move.getTarget().getPiece().getType() == PieceType.REDMASTER
+                    || move.getTarget().getPiece().getType() == PieceType.BLUEMASTER))
+                    || (move.getPiece().getType() == PieceType.BLUEMASTER && move.getTarget().isRedTemple())
+                    || (move.getPiece().getType() == PieceType.REDMASTER && move.getTarget().isBlueTemple())) {
+                winningMoves.add(move);
+            }
+        }
+
+        // If there are any winning moves
+        if (!winningMoves.isEmpty()) {
+            // Generate a random index within the range of winning moves
+            int randomIndex = (int) (Math.random() * winningMoves.size());
+            // Return the randomly selected winning move
+            return winningMoves.get(randomIndex);
+        }
 
         List<Move> aggressiveMoves = new ArrayList<>();
 

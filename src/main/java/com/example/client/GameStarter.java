@@ -44,9 +44,9 @@ public class GameStarter {
     public static void main(String[] args) {
         GameStarter gameStarter = new GameStarter();
 
-        gameStarter.runGames(1 * 60 * 1000, "MCTS", "light");
-        gameStarter.runGames(1 * 60 * 1000, "RAVE_MCTS", "heavy");
-        gameStarter.runGames(1 * 60 * 1000, "HEURISTIC_MCTS", "heavy");
+        gameStarter.runGames(6 * 60 * 60 * 1000, "MCTS", "heavy");
+        gameStarter.runGames(6 * 60 * 60 * 1000, "RAVE_MCTS", "heavy");
+        gameStarter.runGames(6 * 60 * 60 * 1000, "HEURISTIC_MCTS", "heavy");
     }
 
     public void test() {
@@ -220,7 +220,7 @@ public class GameStarter {
                         Tile target = game.getBoard().getTile(origin.getX() + state.getMovementX(),
                                 origin.getY() + state.getMovementY());
                         Move philsMove = new Move(game.getCardByName(state.getCardName()),
-                                piece, new int[] { state.getMovementX(), state.getMovementY() },
+                                piece, new int[]{state.getMovementX(), state.getMovementY()},
                                 origin, target);
                         game.playTurn(philsMove);
                         // Dann Move bauen
